@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Jost',sans-serif;
+  min-height:100vh;
+  background:linear-gradient(160deg,#fff0f7 0%,#f3eeff 50%,#fff8f0 100%);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+}
+
+/* BG CIRCLES */
+.bg-circle{position:fixed;border-radius:50%;pointer-events:none;opacity:0.18;filter:blur(60px);}
+
+/* MAIN */
+#mainContent{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;width:100%;
+  position:relative;z-index:2;
+  gap:0.9rem;padding:1.2rem;
+}
+
+/* TITLE */
+.hb-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.2rem,7vw,4.2rem);
+  font-weight:300;font-style:italic;
+  color:#c06080;text-align:center;
+  opacity:0;transform:translateY(30px);
+  transition:opacity 1.2s ease, transform 1.2s ease;
+  line-height:1.15;
+}
+.hb-title span{color:#8a5cc8;}
+.hb-title.show{opacity:1;transform:translateY(0);}
+
+/* SUBTITLE */
+.hb-sub{
+  font-size:0.75rem;letter-spacing:0.3em;text-transform:uppercase;
+  color:rgba(180,100,140,0.5);font-weight:300;
+  opacity:0;transition:opacity 1s ease 0.5s;
+}
+.hb-sub.show{opacity:1;}
+
+/* CAKE */
+#cakeWrap{
+  opacity:0;transform:scale(0.85) translateY(20px);
+  transition:opacity 1.2s ease 0.4s, transform 1.2s ease 0.4s;
+}
+#cakeWrap.show{opacity:1;transform:scale(1) translateY(0);}
+svg#cakeSvg{overflow:visible;filter:drop-shadow(0 10px 30px rgba(200,120,160,0.25));}
+.candle-g{cursor:pointer;transition:opacity 0.2s;}
+.candle-g:hover{opacity:0.85;}
+
+/* flame flicker */
+.flame{transform-origin:center bottom;animation:flicker 0.4s ease-in-out infinite alternate;}
+@keyframes flicker{0%{transform:scaleX(1) scaleY(1) rotate(-2deg);}100%{transform:scaleX(0.85) scaleY(1.1) rotate(2deg);}}
+
+/* WISH BUTTON */
+#wishBtn{
+  padding:0.8rem 2.8rem;
+  font-family:'Jost',sans-serif;
+  font-size:0.8rem;letter-spacing:0.28em;text-transform:uppercase;
+  color:white;
+  background:linear-gradient(135deg,#e080a8,#a870d0);
+  border:none;border-radius:50px;cursor:pointer;
+  box-shadow:0 4px 22px rgba(180,100,180,0.35);
+  transition:transform 0.2s,box-shadow 0.2s,opacity 0.6s;
+  opacity:0;pointer-events:none;
+}
+#wishBtn.visible{opacity:1;pointer-events:all;}
+#wishBtn:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(180,100,180,0.5);}
+#wishBtn:active{transform:scale(0.97);}
+
+/* WISH TEXT */
+#wishText{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(1.1rem,3vw,1.55rem);
+  font-style:italic;color:#9060b8;
+  text-align:center;max-width:380px;
+  opacity:0;transform:translateY(8px);
+  transition:all 0.9s ease;
+  min-height:2rem;
+}
+#wishText.show{opacity:1;transform:translateY(0);}
+
+/* MUSIC NOTE */
+#musicNote{
+  position:fixed;top:1rem;right:1.2rem;
+  font-size:1.3rem;cursor:pointer;
+  opacity:0.45;transition:opacity 0.2s;
+  z-index:100;
+  animation:noteBounce 2s ease-in-out infinite;
+}
+#musicNote:hover{opacity:0.9;}
+@keyframes noteBounce{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-4px) rotate(5deg);}}
+
+/* BALLOONS */
+.balloon{
+  position:fixed;bottom:-150px;
+  pointer-events:all;cursor:pointer;
+  animation:riseUp linear forwards;
+  z-index:15;
+}
+@keyframes riseUp{
+  0%{bottom:-150px;opacity:0}7%{opacity:1}100%{bottom:110vh;opacity:0.85}
+}
+.bsvg{animation:sway ease-in-out infinite alternate;}
+@keyframes sway{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+.pop-msg{
+  position:fixed;pointer-events:none;
+  font-family:'Cormorant Garamond',serif;
+  font-size:1rem;font-style:italic;
+  color:#b05080;background:white;
+  padding:0.55rem 1.1rem;border-radius:12px;
+  box-shadow:0 4px 18px rgba(0,0,0,0.1);
+  opacity:0;transition:opacity 0.3s;z-index:220;white-space:nowrap;
+}
+.pop-msg.show{opacity:1;}
+
+/* CONFETTI */
+.conf{position:fixed;top:-14px;border-radius:2px;animation:confDrop linear forwards;pointer-events:none;z-index:300;}
+@keyframes confDrop{0%{transform:translateY(0) rotate(0deg) scaleX(1);opacity:1}100%{transform:translateY(106vh) rotate(700deg) scaleX(-1);opacity:0}}
+
+/* POP PARTICLES */
+.pprt{position:fixed;border-radius:50%;animation:ppop ease-out forwards;pointer-events:none;z-index:260;}
+@keyframes ppop{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}
+
+/* PETALS */
+.petal{position:fixed;border-radius:50% 0 50% 0;opacity:0;pointer-events:none;animation:petalFall linear infinite;z-index:1;}
+@keyframes petalFall{0%{opacity:0;transform:translateY(-20px) rotate(0deg)}8%{opacity:0.6}92%{opacity:0.4}100%{opacity:0;transform:translateY(102vh) rotate(540deg)}}
+</style>
+</head>
+<body>
+
+<!-- BG CIRCLES -->
+<div class="bg-circle" style="width:500px;height:500px;background:#f2a0c0;top:-100px;left:-150px;"></div>
+<div class="bg-circle" style="width:400px;height:400px;background:#c0a0e8;bottom:-80px;right:-100px;"></div>
+<div class="bg-circle" style="width:300px;height:300px;background:#e8c87a;bottom:100px;left:50px;"></div>
+
+<div id="musicNote" onclick="toggleMusic()" title="music">🎵</div>
+
+<div id="mainContent">
+  <div class="hb-title" id="titleEl">Happy Birthday<br><span>Shakthi! 🎂</span></div>
+  <div class="hb-sub" id="subEl">wishing you the most beautiful day</div>
+
+  <div id="cakeWrap">
+    <svg id="cakeSvg" width="210" height="240" viewBox="0 0 210 240">
+      <!-- plate shadow -->
+      <ellipse cx="105" cy="225" rx="85" ry="11" fill="rgba(200,120,160,0.13)"/>
+      <!-- bottom tier -->
+      <rect x="12" y="158" width="181" height="62" rx="16" fill="#f5a8c0"/>
+      <rect x="12" y="158" width="181" height="18" rx="7" fill="#ec8aaa"/>
+      <!-- bottom deco dots -->
+      <circle cx="48" cy="189" r="9" fill="white" opacity="0.5"/>
+      <circle cx="105" cy="189" r="9" fill="white" opacity="0.5"/>
+      <circle cx="162" cy="189" r="9" fill="white" opacity="0.5"/>
+      <!-- bottom tier wavy edge -->
+      <path d="M12 220 Q30 228 48 220 Q66 212 84 220 Q102 228 120 220 Q138 212 156 220 Q174 228 193 220 L193 220 Q193 230 187 234 Q170 240 105 240 Q40 240 23 234 Q12 230 12 220Z" fill="#f5a8c0" opacity="0.6"/>
+
+      <!-- mid tier -->
+      <rect x="32" y="100" width="146" height="58" rx="13" fill="#c9b8e8"/>
+      <rect x="32" y="100" width="146" height="16" rx="6" fill="#b09ad8"/>
+      <circle cx="72" cy="129" r="8" fill="white" opacity="0.5"/>
+      <circle cx="138" cy="129" r="8" fill="white" opacity="0.5"/>
+      <!-- heart deco mid -->
+      <path d="M100 118 C100 115 96 112 93 115 C90 118 93 124 100 128 C107 124 110 118 107 115 C104 112 100 115 100 118Z" fill="white" opacity="0.35"/>
+
+      <!-- top tier -->
+      <rect x="60" y="56" width="90" height="44" rx="11" fill="#e8c97a"/>
+      <rect x="60" y="56" width="90" height="14" rx="5" fill="#d4b060"/>
+      <!-- frosting drips top -->
+      <ellipse cx="75" cy="56" rx="8" ry="6" fill="white" opacity="0.75"/>
+      <ellipse cx="105" cy="53" rx="8" ry="6" fill="white" opacity="0.75"/>
+      <ellipse cx="135" cy="56" rx="8" ry="6" fill="white" opacity="0.75"/>
+
+      <!-- CANDLES -->
+      <g class="candle-g" id="cg0" onclick="blowCandle(0)">
+        <rect x="77" y="28" width="9" height="29" rx="3.5" fill="#f5a8c0"/>
+        <rect x="79" y="30" width="2" height="26" rx="1" fill="white" opacity="0.3"/>
+        <g class="flame" id="fl0">
+          <ellipse cx="81.5" cy="23" rx="5.5" ry="8" fill="#FFD700" opacity="0.95"/>
+          <ellipse cx="81.5" cy="22" rx="3" ry="5" fill="#FF6B35"/>
+          <ellipse cx="81.5" cy="20" rx="1.5" ry="2.5" fill="#fff9" />
+        </g>
+      </g>
+      <g class="candle-g" id="cg1" onclick="blowCandle(1)">
+        <rect x="97" y="22" width="9" height="35" rx="3.5" fill="#c9b8e8"/>
+        <rect x="99" y="24" width="2" height="32" rx="1" fill="white" opacity="0.3"/>
+        <g class="flame" id="fl1" style="animation-delay:0.15s">
+          <ellipse cx="101.5" cy="17" rx="5.5" ry="8" fill="#FFD700" opacity="0.95"/>
+          <ellipse cx="101.5" cy="16" rx="3" ry="5" fill="#FF6B35"/>
+          <ellipse cx="101.5" cy="14" rx="1.5" ry="2.5" fill="#fff9"/>
+        </g>
+      </g>
+      <g class="candle-g" id="cg2" onclick="blowCandle(2)">
+        <rect x="117" y="28" width="9" height="29" rx="3.5" fill="#e8c97a"/>
+        <rect x="119" y="30" width="2" height="26" rx="1" fill="white" opacity="0.3"/>
+        <g class="flame" id="fl2" style="animation-delay:0.3s">
+          <ellipse cx="121.5" cy="23" rx="5.5" ry="8" fill="#FFD700" opacity="0.95"/>
+          <ellipse cx="121.5" cy="22" rx="3" ry="5" fill="#FF6B35"/>
+          <ellipse cx="121.5" cy="20" rx="1.5" ry="2.5" fill="#fff9"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <button id="wishBtn" onclick="makeWish()">✦ make a wish</button>
+  <div id="wishText"></div>
+</div>
+
+<script>
+// ── MUSIC (Web Audio API — Happy Birthday melody) ──
+let audioCtx, musicPlaying=false, melodyTimeout;
+const NOTE={
+  C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,B4:493.88,
+  C5:523.25,D5:587.33,E5:659.25,F5:698.46,G5:783.99,A5:880
+};
+// Happy Birthday notes + durations (seconds)
+const melody=[
+  [NOTE.C4,.3],[NOTE.C4,.15],[NOTE.D4,.45],[NOTE.C4,.45],[NOTE.F4,.45],[NOTE.E4,.9],
+  [NOTE.C4,.3],[NOTE.C4,.15],[NOTE.D4,.45],[NOTE.C4,.45],[NOTE.G4,.45],[NOTE.F4,.9],
+  [NOTE.C4,.3],[NOTE.C4,.15],[NOTE.C5,.45],[NOTE.A4,.45],[NOTE.F4,.45],[NOTE.E4,.45],[NOTE.D4,.6],
+  [NOTE.A4,.3],[NOTE.A4,.15],[NOTE.G4,.45],[NOTE.F4,.45],[NOTE.G4,.45],[NOTE.F4,1.0]
+];
+
+function initAudio(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+}
+
+function playMelodyLoop(){
+  if(!musicPlaying||!audioCtx) return;
+  let t = audioCtx.currentTime + 0.05;
+  melody.forEach(([freq, dur])=>{
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    const vibrato=audioCtx.createOscillator();
+    const vibratoGain=audioCtx.createGain();
+    vibrato.frequency.value=5.5;
+    vibratoGain.gain.value=3;
+    vibrato.connect(vibratoGain);
+    vibratoGain.connect(o.frequency);
+    o.type='sine';
+    o.frequency.value=freq;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.13,t+0.04);
+    g.gain.linearRampToValueAtTime(0.10,t+dur*0.7);
+    g.gain.linearRampToValueAtTime(0,t+dur*0.95);
+    o.connect(g); g.connect(audioCtx.destination);
+    vibrato.start(t); vibrato.stop(t+dur);
+    o.start(t); o.stop(t+dur);
+    t+=dur;
+  });
+  const totalDur = melody.reduce((s,[,d])=>s+d,0);
+  melodyTimeout = setTimeout(playMelodyLoop,(totalDur+0.8)*1000);
+}
+
+function toggleMusic(){
+  initAudio();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  musicPlaying=!musicPlaying;
+  document.getElementById('musicNote').textContent = musicPlaying?'🎵':'🔇';
+  if(musicPlaying) playMelodyLoop();
+  else { clearTimeout(melodyTimeout); }
+}
+
+function startMusic(){
+  initAudio();
+  audioCtx.resume().then(()=>{
+    musicPlaying=true;
+    playMelodyLoop();
+  });
+}
+
+// ── CONFETTI ──
+function launchConfetti(n){
+  const cols=['#f5a8c0','#c9b8e8','#e8c97a','#a8d8f2','#f9c6d0','#b8e8d0','#f5c6a0','#d4b0e8','#a0f0d0'];
+  for(let i=0;i<n;i++){
+    const c=document.createElement('div');
+    c.className='conf';
+    const col=cols[Math.floor(Math.random()*cols.length)];
+    c.style.cssText=`left:${Math.random()*100}vw;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${col};border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2.2+Math.random()*2.5}s;animation-delay:${Math.random()*0.7}s;`;
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),5500);
+  }
+}
+
+// ── PETALS ──
+function spawnPetals(){
+  const cols=['#f5a8c0','#c9b8e8','#f9d0e0','#e8c97a'];
+  for(let i=0;i<14;i++){
+    const p=document.createElement('div');
+    p.className='petal';
+    p.style.cssText=`left:${Math.random()*100}%;width:${8+Math.random()*8}px;height:${12+Math.random()*10}px;background:${cols[i%cols.length]};animation-duration:${6+Math.random()*6}s;animation-delay:${Math.random()*8}s;`;
+    document.body.appendChild(p);
+  }
+}
+
+// ── ON LOAD ──
+window.addEventListener('load',()=>{
+  spawnPetals();
+  launchConfetti(110);
+  // show title + cake
+  setTimeout(()=>{
+    document.getElementById('titleEl').classList.add('show');
+    document.getElementById('subEl').classList.add('show');
+  },200);
+  setTimeout(()=>document.getElementById('cakeWrap').classList.add('show'),600);
+  setTimeout(()=>document.getElementById('wishBtn').classList.add('visible'),1600);
+  // try autoplay music
+  setTimeout(startMusic, 400);
+});
+
+// ── CANDLES ──
+const lit=[true,true,true];
+function blowCandle(i){
+  if(!lit[i]) return;
+  lit[i]=false;
+  document.getElementById('fl'+i).style.display='none';
+  puff(i);
+  if(lit.every(v=>!v)){
+    launchConfetti(70);
+    document.getElementById('wishBtn').style.background='linear-gradient(135deg,#e060a0,#9050c0)';
+  }
+}
+function puff(i){
+  const positions=[[82,28],[102,22],[122,28]];
+  const svgRect=document.getElementById('cakeSvg').getBoundingClientRect();
+  const scaleX=svgRect.width/210, scaleY=svgRect.height/240;
+  const x=svgRect.left+positions[i][0]*scaleX;
+  const y=svgRect.top+positions[i][1]*scaleY;
+  for(let j=0;j<10;j++){
+    const p=document.createElement('div');
+    p.className='pprt';
+    const angle=(j/10)*Math.PI*2;
+    const dist=28+Math.random()*18;
+    p.style.cssText=`width:5px;height:5px;background:#e8c97a;left:${x}px;top:${y}px;--tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist}px;animation-duration:0.45s;`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),550);
+  }
+}
+
+// ── WISH ──
+const wishLines=[
+  "may this year be your most beautiful yet ✨",
+  "wishing you joy in every little moment 🌸",
+  "cheers to you and another trip around the sun 🎉",
+  "so glad you exist — happy birthday! 💫",
+  "may today feel as magical as you deserve 🌟"
+];
+let wished=false;
+function makeWish(){
+  if(wished) return; wished=true;
+  const wt=document.getElementById('wishText');
+  wt.textContent=wishLines[Math.floor(Math.random()*wishLines.length)];
+  wt.classList.add('show');
+  document.getElementById('wishBtn').style.opacity='0.4';
+  document.getElementById('wishBtn').style.pointerEvents='none';
+  setTimeout(launchBalloons,700);
+}
+
+// ── BALLOONS ──
+const bCols=['#f5a8c0','#c9b8e8','#e8c97a','#a8d8f2','#f9c6d0','#b8e8d0','#f5c6a0'];
+const bMsgs=['you deserve the world! 🌍','stay happy always 🌸','shine bright ✨','sending big hugs!','best year ever 🎉','you\'re amazing!','so loved 💛','keep smiling 😊','joy is yours!','dream big 🌟'];
+let ballooned=false;
+function launchBalloons(){
+  if(ballooned) return; ballooned=true;
+  for(let i=0;i<10;i++) setTimeout(()=>spawnBalloon(i),i*320);
+}
+function spawnBalloon(i){
+  const w=document.createElement('div');
+  w.className='balloon';
+  const col=bCols[i%bCols.length];
+  const sz=50+Math.random()*24;
+  const dur=8+Math.random()*6;
+  w.style.cssText=`left:${4+Math.random()*88}%;animation-duration:${dur}s;`;
+  w.innerHTML=`<svg class="bsvg" width="${sz}" height="${sz*1.35}" viewBox="0 0 60 82" style="animation-duration:${1.7+Math.random()*1.4}s">
+    <ellipse cx="30" cy="31" rx="28" ry="30" fill="${col}" opacity="0.92"/>
+    <ellipse cx="21" cy="20" rx="9" ry="7" fill="white" opacity="0.2"/>
+    <path d="M30 61 Q27 69 30 76 Q33 69 30 61" stroke="${col}" stroke-width="1.5" fill="none"/>
+    <line x1="30" y1="76" x2="30" y2="82" stroke="rgba(0,0,0,0.12)" stroke-width="1"/>
+  </svg>`;
+  w.dataset.col=col; w.dataset.msg=bMsgs[i%bMsgs.length];
+  w.addEventListener('click',popBalloon);
+  document.body.appendChild(w);
+  w.addEventListener('animationend',()=>w.remove());
+}
+function popBalloon(e){
+  const b=e.currentTarget;
+  const r=b.getBoundingClientRect();
+  const cx=r.left+r.width/2, cy=r.top+r.height/3;
+  popBurst(cx,cy,b.dataset.col);
+  showMsg(b.dataset.msg,cx,cy);
+  b.removeEventListener('click',popBalloon);
+  b.style.transition='transform 0.08s,opacity 0.15s';
+  b.style.transform='scale(1.45)';
+  setTimeout(()=>{b.style.transform='scale(0)';b.style.opacity='0';},80);
+  setTimeout(()=>b.remove(),260);
+}
+function popBurst(x,y,col){
+  for(let i=0;i<12;i++){
+    const p=document.createElement('div');
+    p.className='pprt';
+    const a=(i/12)*Math.PI*2, d=35+Math.random()*28;
+    p.style.cssText=`width:7px;height:7px;background:${col};left:${x}px;top:${y}px;--tx:${Math.cos(a)*d}px;--ty:${Math.sin(a)*d}px;animation-duration:0.55s;`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),660);
+  }
+}
+function showMsg(text,x,y){
+  const m=document.createElement('div');
+  m.className='pop-msg';
+  m.textContent=text;
+  document.body.appendChild(m);
+  const lft=Math.min(Math.max(x-90,8),window.innerWidth-210);
+  m.style.cssText=`left:${lft}px;top:${Math.max(y-65,10)}px;`;
+  requestAnimationFrame(()=>m.classList.add('show'));
+  setTimeout(()=>{m.style.opacity='0';setTimeout(()=>m.remove(),400);},2000);
+}
+</script>
+</body>
+</html>
